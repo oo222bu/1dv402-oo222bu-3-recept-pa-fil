@@ -131,7 +131,50 @@ namespace FiledRecipes.Domain
 
         public void Load()
         {
-            throw new NotImplementedException();
+            try
+            {
+                List<IRecipe> recipe = new List<IRecipe>(_recipes);
+                RecipeReadStatus status = new RecipeReadStatus();
+                 
+                using (StreamReader reader = new StreamReader(@"..\..\App_Data\Recipes.txt")) 
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        switch (line)
+                        {
+                            case SectionRecipe:
+                                status = RecipeReadStatus.New;
+                                continue;
+                            case SectionIngredients:
+                                status = RecipeReadStatus.Ingredient;
+                                continue;
+                            case SectionInstructions:
+                                status = RecipeReadStatus.Instruction;
+                                continue;
+                            default:
+                                switch (status)
+                                {
+                                    case RecipeReadStatus.New:
+                                        continue;
+                                    case RecipeReadStatus.Ingredient:
+                                        continue;
+                                    case RecipeReadStatus.Instruction:
+                                        continue;
+                                    default:
+                                        continue;
+                                }
+                                
+                        }
+                    }
+                    Console.WriteLine(line);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Fel inträffade vid läsning av textfil. {0}",ex.Message);                
+            }
         }
 
         public void Save()
