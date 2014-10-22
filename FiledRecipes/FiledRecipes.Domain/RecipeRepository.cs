@@ -132,11 +132,11 @@ namespace FiledRecipes.Domain
         public void Load()
         {
             try
-            {
-                List<IRecipe> recipe = new List<IRecipe>(_recipes);
+            {                
+                List<IRecipe> recipes = new List<IRecipe>();
                 RecipeReadStatus status = new RecipeReadStatus();
                  
-                using (StreamReader reader = new StreamReader(@"..\..\App_Data\Recipes.txt")) 
+                using (StreamReader reader = new StreamReader(@"..\..\App_Data\recipes.txt")) 
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -156,20 +156,38 @@ namespace FiledRecipes.Domain
                                 switch (status)
                                 {
                                     case RecipeReadStatus.New:
+                                        recipes.Add(new Recipe(line));
                                         continue;
                                     case RecipeReadStatus.Ingredient:
+                                        string[] ingredient = line.Split(new char[]{';'});
+                                        if (ingredient.Length % 3 !=0)
+                                        {
+                                            throw new FileFormatException();
+                                        }
+                                        Ingredient myIngredient = new Ingredient();
+                                        myIngredient.Amount = ingredient[0];
+                                        myIngredient.Measure = ingredient[1];
+                                        myIngredient.Name = ingredient[2];
+                                        recipes.Last().Add(myIngredient);
                                         continue;
                                     case RecipeReadStatus.Instruction:
+                                        recipes.Last().Add(line);
                                         continue;
+                                    case RecipeReadStatus.Indefinite:
+                                        throw new FileFormatException();
+                                        
                                     default:
-                                        continue;
+                                        throw new FileFormatException();
                                 }
+                        }                       
                                 
-                        }
                     }
-                    Console.WriteLine(line);
 
                 }
+                recipes.Sort();
+                _recipes = recipes;
+                IsModified = false;
+                OnRecipesChanged(EventArgs.Empty);
             }
             catch (Exception ex)
             {
