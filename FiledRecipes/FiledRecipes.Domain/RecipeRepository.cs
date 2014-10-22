@@ -197,7 +197,17 @@ namespace FiledRecipes.Domain
 
         public void Save()
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(@"..\..\App_Data\recipes.txt"))
+                {
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new NotImplementedException(ex.Message);
+            }
         }
     }
 }
