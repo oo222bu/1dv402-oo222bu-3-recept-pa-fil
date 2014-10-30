@@ -136,7 +136,7 @@ namespace FiledRecipes.Domain
                 List<IRecipe> recipes = new List<IRecipe>();
                 RecipeReadStatus status = new RecipeReadStatus();
                  
-                using (StreamReader reader = new StreamReader(@"..\..\App_Data\recipes.txt")) 
+                using (StreamReader reader = new StreamReader(_path)) 
                 {
                     string line;
                     while ((line = reader.ReadLine()) != null)
@@ -199,9 +199,26 @@ namespace FiledRecipes.Domain
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter(@"..\..\App_Data\recipes.txt"))
+                using (StreamWriter writer = new StreamWriter(_path))
                 {
-                    
+                    foreach (var recipe in _recipes)
+                    {
+                        writer.WriteLine(SectionRecipe);
+                        writer.WriteLine(recipe.Name);
+                        writer.WriteLine(SectionIngredients);
+
+                        foreach (var ingredient in recipe.Ingredients)
+                        {
+                            writer.WriteLine("{0};{1};{2}", ingredient.Amount, ingredient.Measure, ingredient.Name);
+                        }
+
+                        writer.WriteLine(SectionInstructions);
+
+                        foreach (var instruction in recipe.Instructions)
+                        {
+                            writer.WriteLine(instruction);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
