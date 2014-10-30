@@ -131,99 +131,87 @@ namespace FiledRecipes.Domain
 
         public void Load()
         {
-            try
-            {                
-                List<IRecipe> recipes = new List<IRecipe>();
-                RecipeReadStatus status = new RecipeReadStatus();
-                 
-                using (StreamReader reader = new StreamReader(_path)) 
+            List<IRecipe> recipes = new List<IRecipe>();
+            RecipeReadStatus status = new RecipeReadStatus();
+
+            using (StreamReader reader = new StreamReader(_path))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    if (string.IsNullOrWhiteSpace(line))
                     {
-                        switch (line)
-                        {
-                            case SectionRecipe:
-                                status = RecipeReadStatus.New;
-                                continue;
-                            case SectionIngredients:
-                                status = RecipeReadStatus.Ingredient;
-                                continue;
-                            case SectionInstructions:
-                                status = RecipeReadStatus.Instruction;
-                                continue;
-                            default:
-                                switch (status)
-                                {
-                                    case RecipeReadStatus.New:
-                                        recipes.Add(new Recipe(line));
-                                        continue;
-                                    case RecipeReadStatus.Ingredient:
-                                        string[] ingredient = line.Split(new char[]{';'});
-                                        if (ingredient.Length % 3 !=0)
-                                        {
-                                            throw new FileFormatException();
-                                        }
-                                        Ingredient myIngredient = new Ingredient();
-                                        myIngredient.Amount = ingredient[0];
-                                        myIngredient.Measure = ingredient[1];
-                                        myIngredient.Name = ingredient[2];
-                                        recipes.Last().Add(myIngredient);
-                                        continue;
-                                    case RecipeReadStatus.Instruction:
-                                        recipes.Last().Add(line);
-                                        continue;
-                                    case RecipeReadStatus.Indefinite:
+                        continue;
+                    }
+                    switch (line)
+                    {
+                        case SectionRecipe:
+                            status = RecipeReadStatus.New;
+                            continue;
+                        case SectionIngredients:
+                            status = RecipeReadStatus.Ingredient;
+                            continue;
+                        case SectionInstructions:
+                            status = RecipeReadStatus.Instruction;
+                            continue;
+                        default:
+                            switch (status)
+                            {
+                                case RecipeReadStatus.New:
+                                    recipes.Add(new Recipe(line));
+                                    continue;
+                                case RecipeReadStatus.Ingredient:
+                                    string[] ingredient = line.Split(new char[] { ';' },StringSplitOptions.None);
+                                    if (ingredient.Length % 3 != 0)
+                                    {
                                         throw new FileFormatException();
-                                        
-                                    default:
-                                        throw new FileFormatException();
-                                }
-                        }                       
-                                
+                                    }
+                                    Ingredient myIngredient = new Ingredient();
+                                    myIngredient.Amount = ingredient[0];
+                                    myIngredient.Measure = ingredient[1];
+                                    myIngredient.Name = ingredient[2];
+                                    recipes.Last().Add(myIngredient);
+                                    continue;
+                                case RecipeReadStatus.Instruction:
+                                    recipes.Last().Add(line);
+                                    continue;
+                                default:
+                                    throw new FileFormatException();
+                            }
                     }
 
                 }
-                recipes.Sort();
-                _recipes = recipes;
-                IsModified = false;
-                OnRecipesChanged(EventArgs.Empty);
+
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Fel inträffade vid läsning av textfil. {0}",ex.Message);                
-            }
+            recipes.Sort();
+            _recipes = recipes;
+            IsModified = false;
+            OnRecipesChanged(EventArgs.Empty);
         }
 
         public void Save()
         {
-            try
+            using (StreamWriter writer = new StreamWriter(_path))
             {
-                using (StreamWriter writer = new StreamWriter(_path))
+                foreach (IRecipe recipe in _recipes)
                 {
-                    foreach (var recipe in _recipes)
+                    writer.WriteLine(SectionRecipe);
+                    writer.WriteLine(recipe.Name);
+                    writer.WriteLine(SectionIngredients);
+
+                    foreach (IIngredient ingredient in recipe.Ingredients)
                     {
-                        writer.WriteLine(SectionRecipe);
-                        writer.WriteLine(recipe.Name);
-                        writer.WriteLine(SectionIngredients);
-
-                        foreach (var ingredient in recipe.Ingredients)
-                        {
-                            writer.WriteLine("{0};{1};{2}", ingredient.Amount, ingredient.Measure, ingredient.Name);
-                        }
-
-                        writer.WriteLine(SectionInstructions);
-
-                        foreach (var instruction in recipe.Instructions)
-                        {
-                            writer.WriteLine(instruction);
-                        }
+                        writer.WriteLine("{0};{1};{2}", ingredient.Amount, ingredient.Measure, ingredient.Name);
                     }
+
+                    writer.WriteLine(SectionInstructions);
+
+                    foreach (string instruction in recipe.Instructions)
+                    {
+                        writer.WriteLine(instruction);
+                    }
+                    
                 }
-            }
-            catch (Exception ex)
-            {
-                throw new NotImplementedException(ex.Message);
             }
         }
     }

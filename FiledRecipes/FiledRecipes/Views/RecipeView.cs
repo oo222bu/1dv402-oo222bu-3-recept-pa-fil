@@ -18,12 +18,12 @@ namespace FiledRecipes.Views
             Header = recipe.Name;
             ShowHeaderPanel();
             Console.WriteLine("\nIngredienser\n=============");
-            foreach (Ingredient ingredient in recipe.Ingredients)
+            foreach (IIngredient ingredient in recipe.Ingredients)
             {
                 Console.WriteLine(ingredient);
             }
             Console.WriteLine("\nGör så här\n=============");
-            foreach (var instruction in recipe.Instructions)
+            foreach (string instruction in recipe.Instructions)
             {
                 Console.WriteLine(instruction);
             }
@@ -33,7 +33,7 @@ namespace FiledRecipes.Views
 
         public void Show(IEnumerable<IRecipe> recipes)
         {
-            foreach (var recipe in recipes)
+            foreach (IRecipe recipe in recipes)
             {
                 Show(recipe);
                 ContinueOnKeyPressed();
